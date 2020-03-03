@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace GZipConsoleApp.Validators
 {
-    public class CommandValidator
+    public class CommandParameterValidator
     {
         private const string Decompress = "decompress";
         private const string Compress = "compress";
