@@ -5,16 +5,19 @@ namespace GZipIntegrationTests
 {
     public class FileParameterValidatorTests
     {
-        [Fact]
-        public void Validate_ShouldCheckCorrectPath()
+        [Theory]
+        [InlineData(null, null)]
+        [InlineData("adzxc", null)]
+        [InlineData(null, "zxcas")]
+        [InlineData("zxcasd", "zxcas")]
+        [InlineData(@"Z:\data\tter.gz", @"Z:\data\zxc")]
+        public void Validate_ShouldBeFalse(string sourceFilename, string destinationFilename)
         {
-            var fileName = "asdzxc";
-
             var fileParameterValidator = new FileParameterValidator();
-            var result = fileParameterValidator.Validate(fileName);
+            var (isValid, errorMessage) = fileParameterValidator.Validate(sourceFilename, destinationFilename);
 
-            Assert.False(result.isValid);
-            Assert.NotEmpty(result.errorMessage);
+            Assert.False(isValid);
+            Assert.NotEmpty(errorMessage);
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 
 namespace GZipConsoleApp.Validators
 {
@@ -15,7 +14,8 @@ namespace GZipConsoleApp.Validators
                 return (true, string.Empty);
             }
 
-            return (false, $"Invalid 1st parameter, only {Compress}/{Decompress} are valid. Please, use one of them");
+            return (false,
+                $"Invalid 1st parameter, only {Compress}/{Decompress} are valid. Please, {Compress} to compress the file and {Decompress} to decompress zipped file");
         }
     }
 }
