@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("GZipUnitTests")]
+[assembly: InternalsVisibleTo("GZipIntegrationTests")]
 
 namespace GZipConsoleApp
 {

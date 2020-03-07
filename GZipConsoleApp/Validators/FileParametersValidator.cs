@@ -2,7 +2,7 @@
 
 namespace GZipConsoleApp.Validators
 {
-    public class FileParameterValidator
+    internal class FileParametersValidator
     {
         public (bool isValid, string errorMessage) Validate(string sourceFilename, string destinationFilename)
         {
@@ -28,9 +28,9 @@ namespace GZipConsoleApp.Validators
                 return (false, $"{nameof(sourceFilename)} does not exists, please check ${nameof(sourceFilename)}");
             }
 
-            if (destinationFileInfo.Directory is null)
+            if (destinationFileInfo.Exists)
             {
-                return (false, $"{destinationFilename} directory path does not exists");
+                return (false, $"{destinationFilename} already exists");
             }
 
             return (true, string.Empty);

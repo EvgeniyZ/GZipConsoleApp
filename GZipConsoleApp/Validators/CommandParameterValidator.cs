@@ -1,21 +1,19 @@
 ﻿using System;
+using GZipConsoleApp.Entities;
 
 namespace GZipConsoleApp.Validators
 {
-    public class CommandParameterValidator
+    internal class CommandParameterValidator
     {
-        private const string Decompress = "decompress";
-        private const string Compress = "compress";
-
         public (bool isValid, string errorMessage) Validate(string command)
         {
-            if (command.Equals(Decompress, StringComparison.OrdinalIgnoreCase) || command.Equals(Compress, StringComparison.OrdinalIgnoreCase))
+            if (command.Equals(Command.Compress, StringComparison.OrdinalIgnoreCase) || command.Equals(Command.Decompress, StringComparison.OrdinalIgnoreCase))
             {
                 return (true, string.Empty);
             }
 
             return (false,
-                $"Invalid 1st parameter, only {Compress}/{Decompress} are valid. Please, {Compress} to compress the file and {Decompress} to decompress zipped file");
+                $"Invalid 1st parameter, only {Command.Compress}/{Command.Decompress} are valid. Please, {Command.Compress} to compress the file and {Command.Decompress} to decompress zipped file");
         }
     }
 }
