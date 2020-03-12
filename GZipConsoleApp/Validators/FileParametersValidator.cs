@@ -4,28 +4,31 @@ namespace GZipConsoleApp.Validators
 {
     internal class FileParametersValidator
     {
+        private const string Source = "source";
+        private const string Destination = "destination";
+
         public (bool isValid, string errorMessage) Validate(string sourceFilename, string destinationFilename)
         {
             if (string.IsNullOrEmpty(sourceFilename))
             {
-                return (false, ConstructEmptyFilenameMessage(nameof(sourceFilename)));
+                return (false, ConstructEmptyFilenameMessage(Source));
             }
 
             if (string.IsNullOrEmpty(destinationFilename))
             {
-                return (false, ConstructEmptyFilenameMessage(nameof(destinationFilename)));
+                return (false, ConstructEmptyFilenameMessage(Destination));
             }
 
             var sourceFileInfo = new FileInfo(sourceFilename);
             var destinationFileInfo = new FileInfo(destinationFilename);
             if (sourceFileInfo == destinationFileInfo)
             {
-                return (false, $"{nameof(sourceFilename)} and {nameof(destinationFilename)} should not be equal");
+                return (false, $"{Source} and {Destination} should not be the same");
             }
 
             if (!sourceFileInfo.Exists)
             {
-                return (false, $"{nameof(sourceFilename)} does not exists, please check ${nameof(sourceFilename)}");
+                return (false, $"{Source} file name does not exists, please check ${Source} file name");
             }
 
             if (destinationFileInfo.Exists)

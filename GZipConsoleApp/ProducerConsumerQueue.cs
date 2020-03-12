@@ -6,19 +6,27 @@ namespace GZipConsoleApp
 {
     public class ProducerConsumerQueue<T> : IDisposable where T : class
     {
+        private readonly Action<T, int> _consumeAction;
         private readonly object _locker = new object();
         private readonly Thread[] _workers;
         private readonly Queue<T> _tasks = new Queue<T>();
 
-        public ProducerConsumerQueue(int workersCount)
+        public ProducerConsumerQueue(int workersCount, Action<T, int> consumeAction)
         {
+            _consumeAction = consumeAction;
             _workers = new Thread[workersCount];
 
-            for (int i = 0; i < _workers.Length; i++)
-                (_workers[i] = new Thread(Consume)).Start();
+            for (var i = 0; i < _workers.Length; i++)
+            {
+                var workerId = i;
+                (_workers[i] = new Thread(() =>
+                {
+                    Consume(workerId);
+                })).Start();
+            }
         }
 
-        private void Consume()
+        private void Consume(int workerId)
         {
             while (true)
             {
@@ -38,11 +46,11 @@ namespace GZipConsoleApp
                     return;
                 }
 
-                //execute
+                _consumeAction.Invoke(task, workerId);
             }
         }
 
-        public void EnqueueTask(T task)
+        public void Enqueue(T task)
         {
             lock (_locker)
             {
@@ -55,7 +63,7 @@ namespace GZipConsoleApp
         {
             foreach (Thread _ in _workers)
             {
-                EnqueueTask(null);
+                Enqueue(null);
             }
 
             foreach (Thread worker in _workers)
