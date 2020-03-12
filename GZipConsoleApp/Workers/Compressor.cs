@@ -14,7 +14,7 @@ namespace GZipConsoleApp.Workers
         private readonly CancellationToken _cancellationToken;
         private readonly ProducerConsumerQueue<ByteBlock> _compressingQueue;
         private readonly ProducerConsumerQueue<ByteBlock> _writingQueue;
-        private readonly ManualResetEvent[] _completedOperations = new ManualResetEvent[5];
+        private readonly ManualResetEvent[] _completedOperations = new ManualResetEvent[6];
 
         public Compressor(int blockSize, string sourceFilename, string destinationFilename, CancellationToken cancellationToken)
         {
@@ -22,12 +22,16 @@ namespace GZipConsoleApp.Workers
             _sourceFilename = sourceFilename;
             _destinationFilename = destinationFilename;
             _cancellationToken = cancellationToken;
-            _compressingQueue = new ProducerConsumerQueue<ByteBlock>(3, Compress);
+            _compressingQueue = new ProducerConsumerQueue<ByteBlock>(4, Compress);
             _writingQueue = new ProducerConsumerQueue<ByteBlock>(2, Write);
         }
 
         public bool Compress()
         {
+            for (var i = 0; i < _completedOperations.Length; i++)
+            {
+                _completedOperations[i] = new ManualResetEvent(false);
+            }
             var readerThread = new Thread(Read);
             readerThread.Start();
 
@@ -72,6 +76,9 @@ namespace GZipConsoleApp.Workers
                 ByteBlock compressedByteBlock = new ByteBlock(memoryStream.ToArray());
                 _writingQueue.Enqueue(compressedByteBlock);
             }
+
+            ManualResetEvent operation = _completedOperations[workerId];
+            operation.Set();
         }
 
         private void Write(ByteBlock byteBlock, int workerId)
@@ -82,6 +89,9 @@ namespace GZipConsoleApp.Workers
                 BitConverter.GetBytes(byteBlock.Buffer.Length).CopyTo(byteBlock.Buffer, 4);
                 fileCompressed.Write(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
             }
+
+            ManualResetEvent operation = _completedOperations[workerId];
+            operation.Set();
         }
     }
 }
