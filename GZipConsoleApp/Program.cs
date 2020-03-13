@@ -17,7 +17,7 @@ namespace GZipConsoleApp
 
         static void Main(string[] args)
         {
-            args = new[] {"compress", @"C:\gzip-tests\test.txt", @"C:\gzip-tests\result"};
+            args = new[] {"compress", @"C:\gzip-tests\Rasaad.bif", @"C:\gzip-tests\result"};
             if (args.Length != 3)
             {
                 Console.WriteLine(
