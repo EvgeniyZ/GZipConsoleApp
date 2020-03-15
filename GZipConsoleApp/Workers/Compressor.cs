@@ -45,6 +45,7 @@ namespace GZipConsoleApp.Workers
 
         private void Read()
         {
+            var currentBlockId = 0;
             using (var fileToBeCompressed = new FileStream(SourceFilename, FileMode.Open))
             {
                 while (fileToBeCompressed.Position < fileToBeCompressed.Length)
@@ -62,7 +63,7 @@ namespace GZipConsoleApp.Workers
 
                     var readBuffer = new byte[bytesRead];
                     fileToBeCompressed.Read(readBuffer, 0, bytesRead);
-                    _compressingQueue.Enqueue(new ByteBlock(readBuffer));
+                    _compressingQueue.Enqueue(new ByteBlock(currentBlockId++, readBuffer));
                 }
             }
         }
@@ -77,7 +78,7 @@ namespace GZipConsoleApp.Workers
                     gZipStream.Write(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
                 }
 
-                ByteBlock compressedByteBlock = new ByteBlock(memoryStream.ToArray());
+                ByteBlock compressedByteBlock = new ByteBlock(byteBlock.Id, memoryStream.ToArray());
                 WritingQueue.Enqueue(compressedByteBlock);
             }
         }

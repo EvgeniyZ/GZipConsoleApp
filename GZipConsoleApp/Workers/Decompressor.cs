@@ -51,17 +51,19 @@ namespace GZipConsoleApp.Workers
                 while (fileToBeDecompressed.Position < fileToBeDecompressed.Length)
                 {
                     CancellationToken.ThrowIfCancellationRequested();
-                    byte[] lengthBuffer = new byte[8];
+                    byte[] idBuffer = new byte[4];
+                    fileToBeDecompressed.Read(idBuffer, 0, idBuffer.Length);
+                    int id = BitConverter.ToInt32(idBuffer);
+                    
+                    byte[] lengthBuffer = new byte[4];
                     fileToBeDecompressed.Read(lengthBuffer, 0, lengthBuffer.Length);
-                    int blockLength = BitConverter.ToInt32(lengthBuffer, 4);
-                    byte[] compressedData = new byte[blockLength];
-                    lengthBuffer.CopyTo(compressedData, 0);
+                    int compressedBlockLength = BitConverter.ToInt32(lengthBuffer);
+                    byte[] compressedData = new byte[compressedBlockLength];
+                    fileToBeDecompressed.Read(compressedData, 0, compressedBlockLength);
+                    // int dataSize = BitConverter.ToInt32(compressedData, blockLength - 4);
+                    // byte[] lastBuffer = new byte[dataSize];
 
-                    fileToBeDecompressed.Read(compressedData, 8, blockLength - 8);
-                    int dataSize = BitConverter.ToInt32(compressedData, blockLength - 4);
-                    byte [] lastBuffer = new byte[dataSize];
-
-                    ByteBlock block = new ByteBlock(lastBuffer);
+                    ByteBlock block = new ByteBlock(id, compressedData);
                     _decompressingQueue.Enqueue(block);
                 }
             }
@@ -76,7 +78,7 @@ namespace GZipConsoleApp.Workers
                 {
                     gZipStream.Read(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
                     byte[] decompressedData = byteBlock.Buffer.ToArray();
-                    ByteBlock block = new ByteBlock(decompressedData);
+                    ByteBlock block = new ByteBlock(byteBlock.Id, decompressedData);
                     WritingQueue.Enqueue(block);
                 }
             }

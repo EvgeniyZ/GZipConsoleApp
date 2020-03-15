@@ -27,7 +27,11 @@ namespace GZipConsoleApp.Workers
             CancellationToken.ThrowIfCancellationRequested();
             using (var fileCompressed = new FileStream(_destinationFilename + ".gz", FileMode.Append))
             {
-                BitConverter.GetBytes(byteBlock.Buffer.Length).CopyTo(byteBlock.Buffer, 4);
+                //BitConverter.GetBytes(byteBlock.Buffer.Length).CopyTo(byteBlock.Buffer, 4);
+                var idAsByteArray = BitConverter.GetBytes(byteBlock.Id);
+                var bufferLengthAsByteArray = BitConverter.GetBytes(byteBlock.Buffer.Length);
+                fileCompressed.Write(idAsByteArray, 0, idAsByteArray.Length);
+                fileCompressed.Write(bufferLengthAsByteArray, 0, bufferLengthAsByteArray.Length);
                 fileCompressed.Write(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
             }
         }

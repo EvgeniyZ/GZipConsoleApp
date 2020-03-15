@@ -21,7 +21,10 @@ namespace GZipConsoleApp
         static void Main(string[] args)
         {
             //args = new[] {"compress", @"C:\gzip-tests\test.pdf", @"C:\gzip-tests\result"};
-            args = new[] {"compress", @"C:\films\The.Irishman.2019.WEBRip.720p.mkv", @"C:\gzip-tests\result"};
+            //args = new[] {"compress", @"C:\films\The.Irishman.2019.WEBRip.720p.mkv", @"C:\gzip-tests\result"};
+            //args = new[] {"compress", @"C:\gzip-tests\test.txt", @"C:\gzip-tests\result"};
+            args = new[] {"decompress", @"C:\gzip-tests\result.gz", @"C:\gzip-tests\decompressed\test1.txt"};
+            //args = new[] {"decompress", @"C:\gzip-tests\result.gz", @"C:\gzip-tests\test1.pdf"};
             if (args.Length != 3)
             {
                 Console.WriteLine(
@@ -48,7 +51,10 @@ namespace GZipConsoleApp
                     case Command.Compress:
                         var compressor = new Compressor(BlockSize, sourceFilename, destinationFilename, CancellationTokenSource.Token);
                         result = compressor.Compress(OnException);
-
+                        break;
+                    case Command.Decompress:
+                        var decompressor = new Decompressor(BlockSize, sourceFilename, destinationFilename, CancellationTokenSource.Token);
+                        result = decompressor.Decompress(OnException);
                         break;
                 }
 
