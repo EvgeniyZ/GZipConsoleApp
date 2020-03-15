@@ -71,7 +71,7 @@ namespace GZipConsoleApp.Workers
             }
         }
 
-        private void Decompress(ByteBlock byteBlock, int workerId)
+        private void Decompress(ByteBlock byteBlock)
         {
             CancellationToken.ThrowIfCancellationRequested();
             byte[] decompressedData = new byte[byteBlock.Length];
@@ -86,7 +86,7 @@ namespace GZipConsoleApp.Workers
             }
         }
 
-        private void Write(ByteBlock byteBlock, int workerId)
+        private void Write(ByteBlock byteBlock)
         {
             CancellationToken.ThrowIfCancellationRequested();
             using (var destination = new FileStream(DestinationFilename, FileMode.OpenOrCreate, FileAccess.Write))

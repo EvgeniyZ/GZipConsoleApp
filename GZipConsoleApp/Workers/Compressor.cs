@@ -70,7 +70,7 @@ namespace GZipConsoleApp.Workers
             }
         }
 
-        private void Compress(ByteBlock byteBlock, int workerId)
+        private void Compress(ByteBlock byteBlock)
         {
             CancellationToken.ThrowIfCancellationRequested();
             using (MemoryStream memoryStream = new MemoryStream())
@@ -85,7 +85,7 @@ namespace GZipConsoleApp.Workers
             }
         }
 
-        private void Write(ByteBlock byteBlock, int workerId)
+        private void Write(ByteBlock byteBlock)
         {
             CancellationToken.ThrowIfCancellationRequested();
             using (var fileCompressed = new FileStream(DestinationFilename + ".gz", FileMode.Append))
