@@ -11,14 +11,15 @@ namespace GZipConsoleApp.Workers
         private readonly ProducerConsumerQueue<ByteBlock> _compressingQueue;
         private readonly ProducerConsumerQueue<ByteBlock> _writingQueue;
 
-        public Compressor(int blockSize, string sourceFilename, string destinationFilename, CancellationToken cancellationToken) : base(blockSize, sourceFilename,
-            destinationFilename, cancellationToken)
+        public Compressor(int blockSize, string sourceFilename, string destinationFilename, CancellationToken cancellationToken,
+            Action<string, Exception> onException) : base(blockSize, sourceFilename,
+            destinationFilename, cancellationToken, onException)
         {
             _compressingQueue = new ProducerConsumerQueue<ByteBlock>(Environment.ProcessorCount, Compress);
             _writingQueue = new ProducerConsumerQueue<ByteBlock>(1, Write);
         }
 
-        public bool Compress(Action<string, Exception> onException)
+        public bool Compress()
         {
             try
             {
@@ -30,7 +31,7 @@ namespace GZipConsoleApp.Workers
                     }
                     catch (Exception e)
                     {
-                        onException(Command.Compress, e);
+                        OnException(Command.Compress, e);
                     }
                 });
                 readerThread.Start();
@@ -77,7 +78,15 @@ namespace GZipConsoleApp.Workers
             {
                 using (GZipStream gZipStream = new GZipStream(memoryStream, CompressionMode.Compress))
                 {
-                    gZipStream.Write(byteBlock.Data, 0, byteBlock.Data.Length);
+                    try
+                    {
+                        gZipStream.Write(byteBlock.Data, 0, byteBlock.Data.Length);
+                    }
+                    catch (Exception e)
+                    {
+                        OnException(Command.Compress, e);
+                        throw;
+                    }
                 }
 
                 ByteBlock compressedByteBlock = ByteBlock.FromData(byteBlock.Id, byteBlock.Data, memoryStream.ToArray());
@@ -90,15 +99,23 @@ namespace GZipConsoleApp.Workers
             CancellationToken.ThrowIfCancellationRequested();
             using (var fileCompressed = new FileStream(DestinationFilename + ZipSettings.ZipExtension, FileMode.Append))
             {
-                var idAsByteArray = BitConverter.GetBytes(byteBlock.Id);
-                fileCompressed.Write(idAsByteArray, 0, idAsByteArray.Length);
+                try
+                {
+                    var idAsByteArray = BitConverter.GetBytes(byteBlock.Id);
+                    fileCompressed.Write(idAsByteArray, 0, idAsByteArray.Length);
 
-                var dataLengthAsByteArray = BitConverter.GetBytes(byteBlock.Data.Length);
-                fileCompressed.Write(dataLengthAsByteArray, 0, dataLengthAsByteArray.Length);
+                    var dataLengthAsByteArray = BitConverter.GetBytes(byteBlock.Data.Length);
+                    fileCompressed.Write(dataLengthAsByteArray, 0, dataLengthAsByteArray.Length);
 
-                var compressedLengthAsByteArray = BitConverter.GetBytes(byteBlock.CompressedData.Length);
-                fileCompressed.Write(compressedLengthAsByteArray, 0, compressedLengthAsByteArray.Length);
-                fileCompressed.Write(byteBlock.CompressedData, 0, byteBlock.CompressedData.Length);
+                    var compressedLengthAsByteArray = BitConverter.GetBytes(byteBlock.CompressedData.Length);
+                    fileCompressed.Write(compressedLengthAsByteArray, 0, compressedLengthAsByteArray.Length);
+                    fileCompressed.Write(byteBlock.CompressedData, 0, byteBlock.CompressedData.Length);
+                }
+                catch (Exception e)
+                {
+                    OnException(Command.Compress, e);
+                    throw;
+                }
             }
         }
     }

@@ -53,12 +53,12 @@ namespace GZipConsoleApp
                 switch (command)
                 {
                     case Command.Compress:
-                        var compressor = new Compressor(BlockSize, sourceFilename, destinationFilename, CancellationTokenSource.Token);
-                        result = compressor.Compress(OnException);
+                        var compressor = new Compressor(BlockSize, sourceFilename, destinationFilename, CancellationTokenSource.Token, OnException);
+                        result = compressor.Compress();
                         break;
                     case Command.Decompress:
-                        var decompressor = new Decompressor(BlockSize, sourceFilename, destinationFilename, CancellationTokenSource.Token);
-                        result = decompressor.Decompress(OnException);
+                        var decompressor = new Decompressor(BlockSize, sourceFilename, destinationFilename, CancellationTokenSource.Token, OnException);
+                        result = decompressor.Decompress();
                         break;
                 }
 

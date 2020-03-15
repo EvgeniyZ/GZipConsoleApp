@@ -11,14 +11,15 @@ namespace GZipConsoleApp.Workers
         private readonly ProducerConsumerQueue<ByteBlock> _decompressingQueue;
         private readonly ProducerConsumerQueue<ByteBlock> _writingQueue;
 
-        public Decompressor(int blockSize, string sourceFilename, string destinationFilename, CancellationToken cancellationToken) : base(blockSize, sourceFilename,
-            destinationFilename, cancellationToken)
+        public Decompressor(int blockSize, string sourceFilename, string destinationFilename, CancellationToken cancellationToken,
+            Action<string, Exception> onException) : base(blockSize, sourceFilename,
+            destinationFilename, cancellationToken, onException)
         {
             _decompressingQueue = new ProducerConsumerQueue<ByteBlock>(Environment.ProcessorCount, Decompress);
             _writingQueue = new ProducerConsumerQueue<ByteBlock>(1, Write);
         }
 
-        public bool Decompress(Action<string, Exception> onException)
+        public bool Decompress()
         {
             try
             {
@@ -30,7 +31,8 @@ namespace GZipConsoleApp.Workers
                     }
                     catch (Exception e)
                     {
-                        onException(Command.Decompress, e);
+                        OnException(Command.Decompress, e);
+                        throw;
                     }
                 });
                 readerThread.Start();
@@ -79,7 +81,16 @@ namespace GZipConsoleApp.Workers
             {
                 using (GZipStream gZipStream = new GZipStream(memoryStream, CompressionMode.Decompress))
                 {
-                    gZipStream.Read(decompressedData, 0, decompressedData.Length);
+                    try
+                    {
+                        gZipStream.Read(decompressedData, 0, decompressedData.Length);
+                    }
+                    catch (Exception e)
+                    {
+                        OnException(Command.Decompress, e);
+                        throw;
+                    }
+
                     ByteBlock block = ByteBlock.FromData(byteBlock.Id, decompressedData);
                     _writingQueue.Enqueue(block);
                 }
@@ -91,9 +102,17 @@ namespace GZipConsoleApp.Workers
             CancellationToken.ThrowIfCancellationRequested();
             using (var destination = new FileStream(DestinationFilename, FileMode.OpenOrCreate, FileAccess.Write))
             {
-                destination.Position = byteBlock.Id * BlockSize;
-                destination.Write(byteBlock.Data, 0, byteBlock.Data.Length);
-                destination.Position = 0;
+                try
+                {
+                    destination.Position = byteBlock.Id * BlockSize;
+                    destination.Write(byteBlock.Data, 0, byteBlock.Data.Length);
+                    destination.Position = 0;
+                }
+                catch (Exception e)
+                {
+                    OnException(Command.Decompress, e);
+                    throw;
+                }
             }
         }
     }
