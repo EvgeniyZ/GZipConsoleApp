@@ -30,6 +30,18 @@ namespace GZipIntegrationTests
             Assert.NotEmpty(errorMessage);
         }
 
+        [Theory]
+        [InlineData("zxcasd", "zxcas")]
+        [InlineData(@"C:\gzip-tests\test.txt", @"C:\gzip-tests\result")]
+        public void Validate_DestinationFileAlreadyExists_ShouldBeFalse(string sourceFilename, string destinationFilename)
+        {
+            var fileParameterValidator = new FileParametersValidator();
+            var (isValid, errorMessage) = fileParameterValidator.Validate(sourceFilename, destinationFilename);
+
+            Assert.False(isValid);
+            Assert.NotEmpty(errorMessage);
+        }
+
         //TODO: uncomment - [Theory(Skip = "Integration test heavy rely on a existing disk, path and folders")]
         [Theory]
         [InlineData(@"C:\me.txt", @"C:\zxc")]
