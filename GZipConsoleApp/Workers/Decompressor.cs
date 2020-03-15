@@ -74,7 +74,7 @@ namespace GZipConsoleApp.Workers
         private void Decompress(ByteBlock byteBlock)
         {
             CancellationToken.ThrowIfCancellationRequested();
-            byte[] decompressedData = new byte[byteBlock.Length];
+            byte[] decompressedData = new byte[byteBlock.OriginLength];
             using (MemoryStream memoryStream = new MemoryStream(byteBlock.CompressedData))
             {
                 using (GZipStream gZipStream = new GZipStream(memoryStream, CompressionMode.Decompress))

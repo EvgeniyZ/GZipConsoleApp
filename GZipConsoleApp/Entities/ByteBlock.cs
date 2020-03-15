@@ -2,11 +2,10 @@
 {
     public class ByteBlock
     {
-        public int Id { get; set; }
-        public byte[] Data { get; set; }
-
-        public int Length { get; set; }
-        public byte[] CompressedData { get; set; }
+        public int Id { get; private set; }
+        public byte[] Data { get; private set; }
+        public int OriginLength { get; private set; }
+        public byte[] CompressedData { get; private set; }
 
         public static ByteBlock FromData(int id, byte[] data, byte[] compressedData = default)
         {
@@ -14,19 +13,18 @@
             {
                 Id = id,
                 Data = data,
-                Length = data.Length,
-                CompressedData = compressedData
+                CompressedData = compressedData,
+                OriginLength = data.Length
             };
         }
 
-        public static ByteBlock FromCompressedData(int id, byte[] compressedData, int length, byte[] data = default)
+        public static ByteBlock FromCompressedData(int id, byte[] compressedData, int length)
         {
             return new ByteBlock
             {
                 Id = id,
-                Data = data,
                 CompressedData = compressedData,
-                Length = length
+                OriginLength = length
             };
         }
     }
