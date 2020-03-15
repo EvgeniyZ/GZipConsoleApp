@@ -18,7 +18,7 @@ namespace GZipConsoleApp.Workers
             _writingQueue = new ProducerConsumerQueue<ByteBlock>(1, Write);
         }
 
-        public bool Decompress(Action<Exception> onException)
+        public bool Decompress(Action<string, Exception> onException)
         {
             try
             {
@@ -30,7 +30,7 @@ namespace GZipConsoleApp.Workers
                     }
                     catch (Exception e)
                     {
-                        onException(e);
+                        onException(Command.Decompress, e);
                     }
                 });
                 readerThread.Start();

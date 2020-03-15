@@ -22,9 +22,9 @@ namespace GZipConsoleApp
         {
             //args = new[] {"compress", @"C:\gzip-tests\test.pdf", @"C:\gzip-tests\result"};
             //args = new[] {"compress", @"C:\films\The.Irishman.2019.WEBRip.720p.mkv", @"C:\gzip-tests\result"};
-            //args = new[] {"compress", @"C:\gzip-tests\test.txt", @"C:\gzip-tests\result"};
+            args = new[] {"compress", @"C:\gzip-tests\test.txt", @"C:\gzip-tests\result"};
             //args = new[] {"decompress", @"C:\gzip-tests\result.gz", @"C:\gzip-tests\decompressed\test1.txt"};
-            args = new[] {"decompress", @"C:\gzip-tests\result.gz", @"C:\gzip-tests\decompressed\test1.pdf"};
+            //args = new[] {"decompress", @"C:\gzip-tests\result.gz", @"C:\gzip-tests\decompressed\test1.pdf"};
             if (args.Length != 3)
             {
                 Console.WriteLine(
@@ -43,6 +43,8 @@ namespace GZipConsoleApp
                 return;
             }
 
+            CancellationTokenSource.Token.Register(() => { DeleteFileOnAbortion(destinationFilename); });
+
             try
             {
                 bool result = false;
@@ -60,7 +62,7 @@ namespace GZipConsoleApp
 
                 if (ExceptionOccured)
                 {
-                    Console.WriteLine(ErrorCode);
+                    Cancel();
                 }
                 else
                 {
@@ -69,37 +71,51 @@ namespace GZipConsoleApp
             }
             catch (Exception e)
             {
-                Console.WriteLine($"{command} is aborted due to exception, please contact a developer and send him an exception below.");
-                Console.WriteLine(e);
-                try
-                {
-                    System.IO.File.Delete(destinationFilename);
-                }
-                catch (Exception exception)
-                {
-                    Console.WriteLine(
-                        $"Unsuccessfully deleting {destinationFilename} due to an exception below. Please contact a developer and send him the exception");
-                    Console.WriteLine(exception);
-                    throw;
-                }
-
+                ShowWarningMessageOnException(command, e);
+                Cancel();
                 throw;
             }
         }
 
-        static void OnException(Exception ex)
+        private static void ShowWarningMessageOnException(string command, Exception e)
         {
-            Console.WriteLine(ex);
+            Console.WriteLine($"{command} is aborted due to exception, please contact a developer and send him an exception below.");
+            Console.WriteLine(e);
+        }
+
+        private static void Cancel()
+        {
+            Console.WriteLine(ErrorCode);
+            CancellationTokenSource.Cancel();
+            CancellationTokenSource.Dispose();
+        }
+
+        private static void DeleteFileOnAbortion(string destinationFilename)
+        {
+            try
+            {
+                System.IO.File.Delete(destinationFilename);
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(
+                    $"Unsuccessfully deleting {destinationFilename} due to an exception below. Please contact a developer and send him the exception");
+                Console.WriteLine(exception);
+                throw;
+            }
+        }
+
+        private static void OnException(string command, Exception ex)
+        {
+            ShowWarningMessageOnException(command, ex);
             ExceptionOccured = true;
         }
 
-        static void CancelKeyPress(object sender, ConsoleCancelEventArgs args)
+        private static void CancelKeyPress(object sender, ConsoleCancelEventArgs args)
         {
             if (args.SpecialKey == ConsoleSpecialKey.ControlC)
             {
-                Console.WriteLine("Cancelling zipping");
-                CancellationTokenSource.Cancel();
-                CancellationTokenSource.Dispose();
+                Cancel();
                 args.Cancel = true;
             }
         }

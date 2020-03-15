@@ -18,7 +18,7 @@ namespace GZipConsoleApp.Workers
             _writingQueue = new ProducerConsumerQueue<ByteBlock>(1, Write);
         }
 
-        public bool Compress(Action<Exception> onException)
+        public bool Compress(Action<string, Exception> onException)
         {
             try
             {
@@ -30,7 +30,7 @@ namespace GZipConsoleApp.Workers
                     }
                     catch (Exception e)
                     {
-                        onException(e);
+                        onException(Command.Compress, e);
                     }
                 });
                 readerThread.Start();
@@ -88,7 +88,7 @@ namespace GZipConsoleApp.Workers
         private void Write(ByteBlock byteBlock)
         {
             CancellationToken.ThrowIfCancellationRequested();
-            using (var fileCompressed = new FileStream(DestinationFilename + ".gz", FileMode.Append))
+            using (var fileCompressed = new FileStream(DestinationFilename + ZipSettings.ZipExtension, FileMode.Append))
             {
                 var idAsByteArray = BitConverter.GetBytes(byteBlock.Id);
                 fileCompressed.Write(idAsByteArray, 0, idAsByteArray.Length);

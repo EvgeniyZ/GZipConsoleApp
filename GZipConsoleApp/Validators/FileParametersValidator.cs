@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using GZipConsoleApp.Entities;
 
 namespace GZipConsoleApp.Validators
 {
@@ -20,7 +21,7 @@ namespace GZipConsoleApp.Validators
             }
 
             var sourceFileInfo = new FileInfo(sourceFilename);
-            var destinationFileInfo = new FileInfo(destinationFilename);
+            var destinationFileInfo = new FileInfo(destinationFilename + ZipSettings.ZipExtension);
             if (sourceFileInfo == destinationFileInfo)
             {
                 return (false, $"{Source} and {Destination} should not be the same");
