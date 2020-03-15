@@ -34,7 +34,7 @@ namespace GZipConsoleApp.Validators
 
             if (destinationFileInfo.Exists)
             {
-                return (false, $"{destinationFilename} already exists");
+                return (false, $"{destinationFilename + ZipSettings.ZipExtension} already exists");
             }
 
             return (true, string.Empty);
