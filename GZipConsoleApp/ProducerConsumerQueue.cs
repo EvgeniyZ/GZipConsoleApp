@@ -19,10 +19,7 @@ namespace GZipConsoleApp
             for (var i = 0; i < _workers.Length; i++)
             {
                 var workerId = i;
-                (_workers[i] = new Thread(() =>
-                {
-                    Consume(workerId);
-                })).Start();
+                (_workers[i] = new Thread(() => { Consume(workerId); })).Start();
             }
         }
 
@@ -31,14 +28,23 @@ namespace GZipConsoleApp
             while (true)
             {
                 T task;
-                lock (_locker)
+                var lockWasTaken = false;
+                try
                 {
+                    Monitor.Enter(_locker, ref lockWasTaken);
                     while (_tasks.Count == 0)
                     {
                         Monitor.Wait(_locker);
                     }
 
                     task = _tasks.Dequeue();
+                }
+                finally
+                {
+                    if (lockWasTaken)
+                    {
+                        Monitor.Exit(_locker);
+                    }
                 }
 
                 if (task == null)
@@ -52,10 +58,19 @@ namespace GZipConsoleApp
 
         public void Enqueue(T task)
         {
-            lock (_locker)
+            var lockWasTaken = false;
+            try
             {
+                Monitor.Enter(_locker, ref lockWasTaken);
                 _tasks.Enqueue(task);
                 Monitor.PulseAll(_locker);
+            }
+            finally
+            {
+                if (lockWasTaken)
+                {
+                    Monitor.Exit(_locker);
+                }
             }
         }
 
