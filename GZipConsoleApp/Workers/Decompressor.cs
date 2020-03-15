@@ -91,12 +91,7 @@ namespace GZipConsoleApp.Workers
             CancellationToken.ThrowIfCancellationRequested();
             using (var destination = new FileStream(DestinationFilename, FileMode.OpenOrCreate, FileAccess.Write))
             {
-                var blockPosition = byteBlock.Id > 0 ? byteBlock.Id * BlockSize : 0;
-                if (blockPosition > 0)
-                {
-                    destination.Position = blockPosition;
-                }
-
+                destination.Position = byteBlock.Id * BlockSize;
                 destination.Write(byteBlock.Data, 0, byteBlock.Data.Length);
                 destination.Position = 0;
             }
