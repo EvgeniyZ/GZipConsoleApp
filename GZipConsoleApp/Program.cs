@@ -16,10 +16,11 @@ namespace GZipConsoleApp
         private static readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
         private const int SuccessCode = 0;
         private const int ErrorCode = 1;
+        private static bool ExceptionOccured;
 
         static void Main(string[] args)
         {
-            //args = new[] {"compress", @"C:\gzip-tests\ngrok.exe", @"C:\gzip-tests\result"};
+            //args = new[] {"compress", @"C:\gzip-tests\test.pdf", @"C:\gzip-tests\result"};
             args = new[] {"compress", @"C:\films\The.Irishman.2019.WEBRip.720p.mkv", @"C:\gzip-tests\result"};
             if (args.Length != 3)
             {
@@ -46,13 +47,19 @@ namespace GZipConsoleApp
                 {
                     case Command.Compress:
                         var compressor = new Compressor(BlockSize, sourceFilename, destinationFilename, CancellationTokenSource.Token);
-                        result = compressor.Compress();
+                        result = compressor.Compress(OnException);
 
                         break;
                 }
 
-                Console.WriteLine(result ? "Compression is successfully finished" : "Compression failed with an unknown error");
-                Console.WriteLine(result ? SuccessCode : ErrorCode);
+                if (ExceptionOccured)
+                {
+                    Console.WriteLine(ErrorCode);
+                }
+                else
+                {
+                    Console.WriteLine(result ? SuccessCode : ErrorCode);
+                }
             }
             catch (Exception e)
             {
@@ -72,6 +79,12 @@ namespace GZipConsoleApp
 
                 throw;
             }
+        }
+
+        static void OnException(Exception ex)
+        {
+            Console.WriteLine(ex);
+            ExceptionOccured = true;
         }
 
         static void CancelKeyPress(object sender, ConsoleCancelEventArgs args)

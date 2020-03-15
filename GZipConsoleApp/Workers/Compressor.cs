@@ -16,11 +16,21 @@ namespace GZipConsoleApp.Workers
             _compressingQueue = new ProducerConsumerQueue<ByteBlock>(Environment.ProcessorCount, Compress);
         }
 
-        public bool Compress()
+        public bool Compress(Action<Exception> onException)
         {
             try
             {
-                var readerThread = new Thread(Read);
+                var readerThread = new Thread(() =>
+                {
+                    try
+                    {
+                        Read();
+                    }
+                    catch (Exception e)
+                    {
+                        onException(e);
+                    }
+                });
                 readerThread.Start();
                 Thread.Sleep(1000); // wait for a reader thread to write something to _compressingQueue
             }
