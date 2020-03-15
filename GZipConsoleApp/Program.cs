@@ -24,7 +24,7 @@ namespace GZipConsoleApp
             //args = new[] {"compress", @"C:\films\The.Irishman.2019.WEBRip.720p.mkv", @"C:\gzip-tests\result"};
             //args = new[] {"compress", @"C:\gzip-tests\test.txt", @"C:\gzip-tests\result"};
             args = new[] {"decompress", @"C:\gzip-tests\result.gz", @"C:\gzip-tests\decompressed\test1.txt"};
-            //args = new[] {"decompress", @"C:\gzip-tests\result.gz", @"C:\gzip-tests\test1.pdf"};
+            //args = new[] {"decompress", @"C:\gzip-tests\result.gz", @"C:\gzip-tests\decompressed\test1.pdf"};
             if (args.Length != 3)
             {
                 Console.WriteLine(

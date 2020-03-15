@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Threading;
 using GZipConsoleApp.Entities;
 
@@ -10,11 +9,13 @@ namespace GZipConsoleApp.Workers
     public class Decompressor : GZipper
     {
         private readonly ProducerConsumerQueue<ByteBlock> _decompressingQueue;
+        private readonly ProducerConsumerQueue<ByteBlock> _writingQueue;
 
         public Decompressor(int blockSize, string sourceFilename, string destinationFilename, CancellationToken cancellationToken) : base(blockSize, sourceFilename,
             destinationFilename, cancellationToken)
         {
             _decompressingQueue = new ProducerConsumerQueue<ByteBlock>(Environment.ProcessorCount, Decompress);
+            _writingQueue = new ProducerConsumerQueue<ByteBlock>(1, Write);
         }
 
         public bool Decompress(Action<Exception> onException)
@@ -38,7 +39,7 @@ namespace GZipConsoleApp.Workers
             finally
             {
                 _decompressingQueue.Dispose();
-                WritingQueue.Dispose();
+                _writingQueue.Dispose();
             }
 
             return true;
@@ -54,16 +55,17 @@ namespace GZipConsoleApp.Workers
                     byte[] idBuffer = new byte[4];
                     fileToBeDecompressed.Read(idBuffer, 0, idBuffer.Length);
                     int id = BitConverter.ToInt32(idBuffer);
-                    
-                    byte[] lengthBuffer = new byte[4];
-                    fileToBeDecompressed.Read(lengthBuffer, 0, lengthBuffer.Length);
-                    int compressedBlockLength = BitConverter.ToInt32(lengthBuffer);
-                    byte[] compressedData = new byte[compressedBlockLength];
-                    fileToBeDecompressed.Read(compressedData, 0, compressedBlockLength);
-                    // int dataSize = BitConverter.ToInt32(compressedData, blockLength - 4);
-                    // byte[] lastBuffer = new byte[dataSize];
 
-                    ByteBlock block = new ByteBlock(id, compressedData);
+                    byte[] originLengthBuffer = new byte[4];
+                    fileToBeDecompressed.Read(originLengthBuffer, 0, originLengthBuffer.Length);
+                    int originLength = BitConverter.ToInt32(originLengthBuffer);
+                    byte[] compressedLengthBuffer = new byte[4];
+                    fileToBeDecompressed.Read(compressedLengthBuffer, 0, compressedLengthBuffer.Length);
+                    int compressedLength = BitConverter.ToInt32(compressedLengthBuffer);
+                    byte[] compressedData = new byte[compressedLength];
+                    fileToBeDecompressed.Read(compressedData, 0, compressedLength);
+
+                    ByteBlock block = ByteBlock.FromCompressedData(id, compressedData, originLength);
                     _decompressingQueue.Enqueue(block);
                 }
             }
@@ -72,15 +74,31 @@ namespace GZipConsoleApp.Workers
         private void Decompress(ByteBlock byteBlock, int workerId)
         {
             CancellationToken.ThrowIfCancellationRequested();
-            using (MemoryStream memoryStream = new MemoryStream(byteBlock.Buffer))
+            byte[] decompressedData = new byte[byteBlock.Length];
+            using (MemoryStream memoryStream = new MemoryStream(byteBlock.CompressedData))
             {
                 using (GZipStream gZipStream = new GZipStream(memoryStream, CompressionMode.Decompress))
                 {
-                    gZipStream.Read(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
-                    byte[] decompressedData = byteBlock.Buffer.ToArray();
-                    ByteBlock block = new ByteBlock(byteBlock.Id, decompressedData);
-                    WritingQueue.Enqueue(block);
+                    gZipStream.Read(decompressedData, 0, decompressedData.Length);
+                    ByteBlock block = ByteBlock.FromData(byteBlock.Id, decompressedData);
+                    _writingQueue.Enqueue(block);
                 }
+            }
+        }
+
+        private void Write(ByteBlock byteBlock, int workerId)
+        {
+            CancellationToken.ThrowIfCancellationRequested();
+            using (var destination = new FileStream(DestinationFilename, FileMode.OpenOrCreate, FileAccess.Write))
+            {
+                var blockPosition = byteBlock.Id > 0 ? byteBlock.Id * BlockSize : 0;
+                if (blockPosition > 0)
+                {
+                    destination.Position = blockPosition;
+                }
+
+                destination.Write(byteBlock.Data, 0, byteBlock.Data.Length);
+                destination.Position = 0;
             }
         }
     }
