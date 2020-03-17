@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace GZipConsoleApp
 {
-    public class ProducerConsumerQueue<T> : IDisposable where T : class
+    public class ProducerConsumerQueue<T> where T : class
     {
         private readonly Action<T> _consumeAction;
         private readonly object _locker = new object();
@@ -62,7 +62,7 @@ namespace GZipConsoleApp
             {
                 Monitor.Enter(_locker, ref lockWasTaken);
                 _tasks.Enqueue(task);
-                Monitor.PulseAll(_locker);
+                Monitor.Pulse(_locker);
             }
             finally
             {
@@ -73,7 +73,7 @@ namespace GZipConsoleApp
             }
         }
 
-        public void Dispose()
+        public void Stop()
         {
             foreach (Thread _ in _workers)
             {

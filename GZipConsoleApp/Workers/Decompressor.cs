@@ -10,6 +10,7 @@ namespace GZipConsoleApp.Workers
     {
         private readonly ProducerConsumerQueue<ByteBlock> _decompressingQueue;
         private readonly ProducerConsumerQueue<ByteBlock> _writingQueue;
+        private volatile bool _readCompleted;
 
         public Decompressor(int blockSize, string sourceFilename, string destinationFilename, CancellationToken cancellationToken,
             Action<string, Exception> onException) : base(blockSize, sourceFilename,
@@ -21,28 +22,25 @@ namespace GZipConsoleApp.Workers
 
         public bool Decompress()
         {
-            try
+            var readerThread = new Thread(() =>
             {
-                var readerThread = new Thread(() =>
+                try
                 {
-                    try
-                    {
-                        Read();
-                    }
-                    catch (Exception e)
-                    {
-                        OnException(Command.Decompress, e);
-                        throw;
-                    }
-                });
-                readerThread.Start();
-                Thread.Sleep(1000); // wait for a reader thread to write something to _compressingQueue
-            }
-            finally
+                    Read();
+                }
+                catch (Exception e)
+                {
+                    OnException(Command.Decompress, e);
+                    throw;
+                }
+            });
+            readerThread.Start();
+            while (!_readCompleted)
             {
-                _decompressingQueue.Dispose();
-                _writingQueue.Dispose();
             }
+
+            _decompressingQueue.Stop();
+            _writingQueue.Stop();
 
             return true;
         }
@@ -70,6 +68,8 @@ namespace GZipConsoleApp.Workers
                     ByteBlock block = ByteBlock.FromCompressedData(id, compressedData, originLength);
                     _decompressingQueue.Enqueue(block);
                 }
+
+                _readCompleted = true;
             }
         }
 
@@ -104,7 +104,7 @@ namespace GZipConsoleApp.Workers
             {
                 try
                 {
-                    destination.Position = byteBlock.Id * BlockSize;
+                    destination.Position = byteBlock.Id * (long) BlockSize;
                     destination.Write(byteBlock.Data, 0, byteBlock.Data.Length);
                     destination.Position = 0;
                 }
