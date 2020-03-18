@@ -73,7 +73,7 @@ namespace GZipConsoleApp
                     Console.WriteLine(result ? SuccessCode : ErrorCode);
                 }
             }
-            catch (OperationCanceledException oce)
+            catch (OperationCanceledException)
             {
                 Cancel();
             }

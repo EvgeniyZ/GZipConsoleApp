@@ -10,11 +10,10 @@ namespace GZipConsoleApp.Workers
     {
         private readonly ProducerConsumerQueue<ByteBlock> _decompressingQueue;
         private readonly ProducerConsumerQueue<ByteBlock> _writingQueue;
-        private volatile bool _readCompleted;
 
         public Decompressor(int blockSize, string sourceFilename, string destinationFilename, CancellationToken cancellationToken,
             Action<string, Exception> onException) : base(blockSize, sourceFilename,
-            destinationFilename, cancellationToken, onException)
+            destinationFilename, Entities.Command.Decompress, cancellationToken, onException)
         {
             _decompressingQueue = new ProducerConsumerQueue<ByteBlock>(Environment.ProcessorCount, Decompress);
             _writingQueue = new ProducerConsumerQueue<ByteBlock>(1, Write);
@@ -22,20 +21,8 @@ namespace GZipConsoleApp.Workers
 
         public bool Decompress()
         {
-            var readerThread = new Thread(() =>
-            {
-                try
-                {
-                    Read();
-                }
-                catch (Exception e)
-                {
-                    OnException(Command.Decompress, e);
-                    throw;
-                }
-            });
-            readerThread.Start();
-            while (!_readCompleted)
+            StartRead();
+            while (!ReadCompleted)
             {
             }
 
@@ -45,7 +32,7 @@ namespace GZipConsoleApp.Workers
             return true;
         }
 
-        private void Read()
+        protected override void Read()
         {
             using (var fileToBeDecompressed = new FileStream(SourceFilename, FileMode.Open))
             {
@@ -69,7 +56,7 @@ namespace GZipConsoleApp.Workers
                     _decompressingQueue.Enqueue(block);
                 }
 
-                _readCompleted = true;
+                ReadCompleted = true;
             }
         }
 
@@ -87,7 +74,7 @@ namespace GZipConsoleApp.Workers
                     }
                     catch (Exception e)
                     {
-                        OnException(Command.Decompress, e);
+                        OnException(Command, e);
                         throw;
                     }
 
@@ -110,7 +97,7 @@ namespace GZipConsoleApp.Workers
                 }
                 catch (Exception e)
                 {
-                    OnException(Command.Decompress, e);
+                    OnException(Command, e);
                     throw;
                 }
             }

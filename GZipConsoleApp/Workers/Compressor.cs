@@ -10,11 +10,10 @@ namespace GZipConsoleApp.Workers
     {
         private readonly ProducerConsumerQueue<ByteBlock> _compressingQueue;
         private readonly ProducerConsumerQueue<ByteBlock> _writingQueue;
-        private volatile bool _readCompleted;
 
         public Compressor(int blockSize, string sourceFilename, string destinationFilename, CancellationToken cancellationToken,
             Action<string, Exception> onException) : base(blockSize, sourceFilename,
-            destinationFilename, cancellationToken, onException)
+            destinationFilename, Entities.Command.Compress, cancellationToken, onException)
         {
             _compressingQueue = new ProducerConsumerQueue<ByteBlock>(Environment.ProcessorCount, Compress);
             _writingQueue = new ProducerConsumerQueue<ByteBlock>(1, Write);
@@ -22,20 +21,8 @@ namespace GZipConsoleApp.Workers
 
         public bool Compress()
         {
-            var readerThread = new Thread(() =>
-            {
-                try
-                {
-                    Read();
-                }
-                catch (Exception e)
-                {
-                    OnException(Command.Compress, e);
-                    throw;
-                }
-            });
-            readerThread.Start();
-            while (!_readCompleted)
+            StartRead();
+            while (!ReadCompleted)
             {
             }
 
@@ -45,7 +32,7 @@ namespace GZipConsoleApp.Workers
             return true;
         }
 
-        private void Read()
+        protected override void Read()
         {
             var currentBlockId = 0;
             using (var fileToBeCompressed = new FileStream(SourceFilename, FileMode.Open))
@@ -70,12 +57,14 @@ namespace GZipConsoleApp.Workers
                     }
                     catch (Exception e)
                     {
-                        OnException(Command.Compress, e);
+                        OnException(Command, e);
                         throw;
                     }
+
                     _compressingQueue.Enqueue(ByteBlock.FromData(currentBlockId++, data));
                 }
-                _readCompleted = true;
+
+                ReadCompleted = true;
             }
         }
 
@@ -92,7 +81,7 @@ namespace GZipConsoleApp.Workers
                     }
                     catch (Exception e)
                     {
-                        OnException(Command.Compress, e);
+                        OnException(Command, e);
                         throw;
                     }
                 }
@@ -121,7 +110,7 @@ namespace GZipConsoleApp.Workers
                 }
                 catch (Exception e)
                 {
-                    OnException(Command.Compress, e);
+                    OnException(Command, e);
                     throw;
                 }
             }
