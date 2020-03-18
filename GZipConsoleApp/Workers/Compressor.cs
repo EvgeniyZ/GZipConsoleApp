@@ -94,7 +94,7 @@ namespace GZipConsoleApp.Workers
         private void Write(ByteBlock byteBlock)
         {
             CancellationToken.ThrowIfCancellationRequested();
-            using (var fileCompressed = new FileStream(DestinationFilename + ZipSettings.ZipExtension, FileMode.Append))
+            using (var fileCompressed = new FileStream(ZipSettings.GetFilenameWithZipExtension(DestinationFilename), FileMode.Append))
             {
                 try
                 {

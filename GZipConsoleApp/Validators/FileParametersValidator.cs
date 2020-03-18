@@ -21,7 +21,7 @@ namespace GZipConsoleApp.Validators
             }
 
             var sourceFileInfo = new FileInfo(sourceFilename);
-            var destinationFileInfo = new FileInfo(destinationFilename + ZipSettings.ZipExtension);
+            var destinationFileInfo = new FileInfo(ZipSettings.GetFilenameWithZipExtension(destinationFilename));
             if (sourceFileInfo == destinationFileInfo)
             {
                 return (false, $"{Source} and {Destination} should not be the same");
@@ -34,7 +34,7 @@ namespace GZipConsoleApp.Validators
 
             if (destinationFileInfo.Exists)
             {
-                return (false, $"{destinationFilename + ZipSettings.ZipExtension} already exists");
+                return (false, $"{ZipSettings.GetFilenameWithZipExtension(destinationFilename)} already exists");
             }
 
             return (true, string.Empty);

@@ -26,8 +26,8 @@ namespace GZipConsoleApp
             //args = new[] {"decompress", @"C:\gzip-tests\result.gz", @"C:\gzip-tests\decompressed\test1.txt"};
             //args = new[] {"decompress", @"C:\gzip-tests\result.gz", @"C:\gzip-tests\decompressed\test1.pdf"};
             
-            //args = new[] {"compress", @"C:\gzip-tests\large-test.zip", @"C:\gzip-tests\result"};
-            args = new[] {"decompress", @"C:\gzip-tests\result.gz", @"C:\gzip-tests\decompressed\large-test.zip"};
+            args = new[] {"compress", @"C:\gzip-tests\large-test.zip", @"C:\gzip-tests\result"};
+            //args = new[] {"decompress", @"C:\gzip-tests\result.gz", @"C:\gzip-tests\decompressed\large-test.zip"};
             if (args.Length != 3)
             {
                 Console.WriteLine(
@@ -75,7 +75,6 @@ namespace GZipConsoleApp
             }
             catch (OperationCanceledException)
             {
-                Cancel();
             }
             catch (Exception e)
             {
@@ -107,12 +106,12 @@ namespace GZipConsoleApp
         {
             try
             {
-                System.IO.File.Delete(destinationFilename + ZipSettings.ZipExtension);
+                System.IO.File.Delete(ZipSettings.GetFilenameWithZipExtension(destinationFilename));
             }
             catch (Exception exception)
             {
                 Console.WriteLine(
-                    $"Unsuccessfully deleting {destinationFilename} due to an exception below. Please contact a developer and send him the exception");
+                    $"Failed deleting {ZipSettings.GetFilenameWithZipExtension(destinationFilename)} due to an exception below. Please contact a developer and send him the exception");
                 Console.WriteLine(exception);
                 throw;
             }
