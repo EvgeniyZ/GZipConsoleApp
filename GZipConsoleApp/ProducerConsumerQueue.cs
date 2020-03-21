@@ -51,7 +51,13 @@ namespace GZipConsoleApp
                     return;
                 }
 
-                _consumeAction.Invoke(task);
+                try
+                {
+                    _consumeAction.Invoke(task);
+                }
+                catch (OperationCanceledException)
+                {
+                }
             }
         }
 

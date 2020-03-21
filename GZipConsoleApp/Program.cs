@@ -25,7 +25,7 @@ namespace GZipConsoleApp
             //args = new[] {"compress", @"C:\gzip-tests\test.txt", @"C:\gzip-tests\result"};
             //args = new[] {"decompress", @"C:\gzip-tests\result.gz", @"C:\gzip-tests\decompressed\test1.txt"};
             //args = new[] {"decompress", @"C:\gzip-tests\result.gz", @"C:\gzip-tests\decompressed\test1.pdf"};
-            
+
             args = new[] {"compress", @"C:\gzip-tests\large-test.zip", @"C:\gzip-tests\result"};
             //args = new[] {"decompress", @"C:\gzip-tests\result.gz", @"C:\gzip-tests\decompressed\large-test.zip"};
             if (args.Length != 3)
@@ -35,7 +35,6 @@ namespace GZipConsoleApp
                 return;
             }
 
-            Console.CancelKeyPress += CancelKeyPress;
             var command = args[0];
             var sourceFilename = args[1];
             var destinationFilename = args[2];
@@ -47,11 +46,14 @@ namespace GZipConsoleApp
                 return;
             }
 
+            Console.CancelKeyPress += CancelKeyPress;
             CancellationTokenSource.Token.Register(() => { DeleteFileOnAbortion(destinationFilename); });
 
             try
             {
                 bool result = false;
+                Console.WriteLine($"{command} started.");
+                Console.WriteLine("Please, use CTRL+C if you want to cancel an operation.");
                 switch (command)
                 {
                     case Command.Compress:
@@ -73,24 +75,15 @@ namespace GZipConsoleApp
                     Console.WriteLine(result ? SuccessCode : ErrorCode);
                 }
             }
-            catch (OperationCanceledException)
-            {
-            }
             catch (Exception e)
             {
                 ShowWarningMessageOnException(command, e);
                 Cancel();
-                throw;
             }
         }
 
         private static void ShowWarningMessageOnException(string command, Exception e)
         {
-            if (e is OperationCanceledException)
-            {
-                return;
-            }
-
             Console.WriteLine($"{command} is aborted due to exception, please contact a developer and send him an exception below.");
             Console.WriteLine(e);
         }
@@ -104,16 +97,18 @@ namespace GZipConsoleApp
 
         private static void DeleteFileOnAbortion(string destinationFilename)
         {
+            var filenameWithZipExtension = ZipSettings.GetFilenameWithZipExtension(destinationFilename);
+            Console.WriteLine($"Operation was canceled - deleting {filenameWithZipExtension}.");
             try
             {
-                System.IO.File.Delete(ZipSettings.GetFilenameWithZipExtension(destinationFilename));
+                System.IO.File.Delete(filenameWithZipExtension);
+                Console.WriteLine($"{filenameWithZipExtension} is deleted.");
             }
             catch (Exception exception)
             {
                 Console.WriteLine(
-                    $"Failed deleting {ZipSettings.GetFilenameWithZipExtension(destinationFilename)} due to an exception below. Please contact a developer and send him the exception");
+                    $"Failed deleting {filenameWithZipExtension} due to an exception below. Please contact a developer and send him the exception.");
                 Console.WriteLine(exception);
-                throw;
             }
         }
 

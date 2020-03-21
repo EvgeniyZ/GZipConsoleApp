@@ -32,10 +32,12 @@ namespace GZipConsoleApp.Workers
                 {
                     Read();
                 }
+                catch (OperationCanceledException)
+                {
+                }
                 catch (Exception e)
                 {
                     OnException(Command, e);
-                    throw;
                 }
             });
             readerThread.Start();

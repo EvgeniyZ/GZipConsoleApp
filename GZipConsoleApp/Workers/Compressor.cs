@@ -58,7 +58,6 @@ namespace GZipConsoleApp.Workers
                     catch (Exception e)
                     {
                         OnException(Command, e);
-                        throw;
                     }
 
                     _compressingQueue.Enqueue(ByteBlock.FromData(currentBlockId++, data));
@@ -82,7 +81,6 @@ namespace GZipConsoleApp.Workers
                     catch (Exception e)
                     {
                         OnException(Command, e);
-                        throw;
                     }
                 }
 
@@ -111,7 +109,6 @@ namespace GZipConsoleApp.Workers
                 catch (Exception e)
                 {
                     OnException(Command, e);
-                    throw;
                 }
             }
         }
