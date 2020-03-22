@@ -84,7 +84,7 @@ namespace GZipConsoleApp.Workers
                     }
                 }
 
-                ByteBlock compressedByteBlock = ByteBlock.FromData(byteBlock.Id, byteBlock.Data, memoryStream.ToArray());
+                ByteBlock compressedByteBlock = ByteBlock.FromData(byteBlock.Id, byteBlock.Data, memoryStream.GetBuffer());
                 _writingQueue.Enqueue(compressedByteBlock);
             }
         }
