@@ -6,8 +6,7 @@ namespace GZipIntegrationTests
 {
     public class CommandAndFilesValidatorTests
     {
-        //TODO: uncomment - [Theory(Skip = "")]
-        [Theory]
+        [Theory(Skip = "Integration test heavy rely on a existing paths and folders")]
         [InlineData(Command.Compress, @"C:\gzip-tests\test.txt", @"C:\gzip-tests\result")]
         [InlineData(Command.Compress, "test.txt", "result")]
         [InlineData(Command.Decompress, @"C:\gzip-tests\test.gz", @"C:\gzip-tests\result")]
@@ -21,7 +20,7 @@ namespace GZipIntegrationTests
             Assert.Empty(errorMessage);
         }
 
-        [Theory]
+        [Theory(Skip = "Integration test heavy rely on a existing paths and folders")]
         [InlineData(Command.Compress, @"C:\gzip-tests\test.gz", @"C:\gzip-tests\result")]
         public void Validate_AlreadyCompressedFiles_ShouldBeInvalid(string command, string sourceFilename, string destinationFilename)
         {
@@ -33,7 +32,7 @@ namespace GZipIntegrationTests
             Assert.NotEmpty(errorMessage);
         }
 
-        [Theory]
+        [Theory(Skip = "Integration test heavy rely on a existing paths and folders")]
         [InlineData(Command.Decompress, @"C:\gzip-tests\test.txt", @"C:\gzip-tests\result")]
         public void Validate_DecompressButNotGzipped_ShouldBeInvalid(string command, string sourceFilename, string destinationFilename)
         {

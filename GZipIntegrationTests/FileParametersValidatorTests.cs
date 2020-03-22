@@ -30,8 +30,7 @@ namespace GZipIntegrationTests
             Assert.NotEmpty(errorMessage);
         }
 
-        [Theory]
-        [InlineData("zxcasd", "zxcas")]
+        [Theory(Skip = "Integration test heavy rely on a existing paths and folders")]
         [InlineData(@"C:\gzip-tests\test.txt", @"C:\gzip-tests\result")]
         public void Validate_DestinationFileAlreadyExists_ShouldBeFalse(string sourceFilename, string destinationFilename)
         {
@@ -42,8 +41,7 @@ namespace GZipIntegrationTests
             Assert.NotEmpty(errorMessage);
         }
 
-        //TODO: uncomment - [Theory(Skip = "Integration test heavy rely on a existing disk, path and folders")]
-        [Theory]
+        [Theory(Skip = "Integration test heavy rely on a existing paths and folders")]
         [InlineData(@"C:\me.txt", @"C:\zxc")]
         public void Validate_ShouldBeTrue(string sourceFilename, string destinationFilename)
         {
